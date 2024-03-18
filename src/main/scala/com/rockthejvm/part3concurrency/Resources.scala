@@ -51,17 +51,13 @@ object Resources extends IOApp.Simple {
   def openFileScanner(path: String): IO[Scanner] =
     IO(new Scanner(new FileReader(new File(path))))
 
-  def readLineByLine(scanner: Scanner): IO[Unit] =
-    if (scanner.hasNextLine) IO(scanner.nextLine()).debug >> IO.sleep(100.millis) >> readLineByLine(scanner)
-    else IO.unit
-
-  def bracketReadFile(path: String): IO[Unit] =
-    IO(s"opening file at $path") >>
-      openFileScanner(path).bracket { scanner =>
+  def readLineByLine(scanner: Scanner): IO[Unit] = if(scanner.hasNextLine) IO(scanner.nextLine()).debug >> IO.sleep(100.millis) >> readLineByLine(scanner) else IO.unit
+  def bracketReadFile(path: String) =
+    IO(s"Opening the file at ${path}") >>
+      openFileScanner(path).bracket{scanner =>
         readLineByLine(scanner)
-      } { scanner =>
-        IO(s"closing file at $path").debug >> IO(scanner.close())
+      } {scanner =>
+        IO(s"Closing file at path ${path}").debug >> IO(scanner.close())
       }
-
-  override def run = bracketReadFile("cats-effect/src/main/scala/com/rockthejvm/part3concurrency/Resources.scala")
+  override def run = bracketReadFile("./src/main/scala/com/rockthejvm/part3concurrency/Resources.scala")
 }
